@@ -13,7 +13,7 @@ public class RenderableGameObject : GameObject
     public RenderableGameObject(SpriteSheet spriteSheet, (int X, int Y) position, double angle = 0.0, Point rotationCenter = new())
         : base()
     {
-        SpriteSheet = spriteSheet;
+        SpriteSheet = spriteSheet.Clone() as SpriteSheet ?? spriteSheet;
         Position = position;
         Angle = angle;
         RotationCenter = rotationCenter;

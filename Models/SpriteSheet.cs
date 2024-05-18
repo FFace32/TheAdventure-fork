@@ -5,7 +5,7 @@ using TheAdventure.Models.Data;
 
 namespace TheAdventure.Models;
 
-public class SpriteSheet
+public class SpriteSheet : ICloneable
 {
     public class Animation
     {
@@ -118,5 +118,21 @@ public class SpriteSheet
                 new Rectangle<int>(dest.X - ScaledFrameCenterOffsetX, dest.Y - ScaledFrameCenterOffsetY, ScaledFrameWidth, ScaledFrameHeight),
                 ActiveAnimation.Flip, angle, rotationCenter);
         }
+    }
+
+    public object Clone()
+    {
+        return new SpriteSheet()
+        {
+            FileName = FileName,
+            RowCount = RowCount,
+            ColumnCount = ColumnCount,
+            FrameWidth = FrameWidth,
+            FrameHeight = FrameHeight,
+            FrameCenter = FrameCenter,
+            Scale = Scale,
+            Animations = Animations.ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
+            _textureId = _textureId
+        };
     }
 }
