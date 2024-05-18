@@ -18,7 +18,8 @@ public class PlayerObject : RenderableGameObject
         Idle,
         Move,
         Attack,
-        GameOver
+        GameOver,
+        Celebrate
     }
 
     private int _pixelsPerSecond = 192;
@@ -89,30 +90,32 @@ public class PlayerObject : RenderableGameObject
 
         var pixelsToMove = time * _pixelsPerSecond;
 
-        var x = Position.X + (int)(right * pixelsToMove);
-        x -= (int)(left * pixelsToMove);
+        var x = Position.X + right * pixelsToMove;
+        x -= left * pixelsToMove;
 
-        var y = Position.Y - (int)(up * pixelsToMove);
-        y += (int)(down * pixelsToMove);
+        var y = Position.Y - up * pixelsToMove;
+        y += down * pixelsToMove;
 
-        if (x < 10)
+        var xOffset = SpriteSheet.ScaledFrameCenterOffsetX / 2; 
+        var yOffset = SpriteSheet.ScaledFrameCenterOffsetY / 2;
+        if (x < xOffset)
         {
-            x = 10;
+            x = xOffset;
         }
 
-        if (y < 24)
+        if (y < yOffset)
         {
-            y = 24;
+            y = yOffset;
         }
 
-        if (x > width - 10)
+        if (x > width - xOffset)
         {
-            x = width - 10;
+            x = width - xOffset;
         }
 
-        if (y > height - 6)
+        if (y > height)
         {
-            y = height - 6;
+            y = height;
         }
 
 

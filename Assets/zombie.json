@@ -1,11 +1,11 @@
 {
-    "rowCount": 34,
+    "rowCount": 38,
     "columnCount": 4,
     "frameWidth": 256,
     "frameHeight": 256,
     "frameCenter": {
         "offsetX": 128,
-        "offsetY": 128
+        "offsetY": 220
     },
     "fileName": "zombie.png",
     "scale": 0.1875,
@@ -68,7 +68,7 @@
                 "row": 29,
                 "col": 3
             },
-            "durationMs": 300,
+            "durationMs": 800,
             "loop": true,
             "flip": 1
         },
@@ -81,7 +81,7 @@
                 "row": 29,
                 "col": 3
             },
-            "durationMs": 300,
+            "durationMs": 800,
             "loop": true
         },
         "AttackDown": {
@@ -93,7 +93,7 @@
                 "row": 24,
                 "col": 3
             },
-            "durationMs": 300,
+            "durationMs": 800,
             "loop": true
         },
         "AttackUp": {
@@ -105,7 +105,7 @@
                 "row": 19,
                 "col": 3
             },
-            "durationMs": 300,
+            "durationMs": 800,
             "loop": true
         },
         "GameOver": {
@@ -119,6 +119,18 @@
             },
             "durationMs": 300,
             "loop": false
+        },
+        "CelebrateDown": {
+            "startFrame": {
+                "row": 34,
+                "col": 0
+            },
+            "endFrame": {
+                "row": 37,
+                "col": 3
+            },
+            "durationMs": 1000,
+            "loop": true
         }
     }
 }
