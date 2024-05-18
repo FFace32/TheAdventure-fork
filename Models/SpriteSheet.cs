@@ -37,15 +37,18 @@ public class SpriteSheet : ICloneable
     private int _textureId = -1;
     private DateTimeOffset _animationStart = DateTimeOffset.MinValue;
 
+    private bool _cloneable = false;
+
     public SpriteSheet(){
 
     }
 
-    public static SpriteSheet? LoadSpriteSheet(string fileName, string folder, GameRenderer renderer){
+    public static SpriteSheet? LoadSpriteSheet(string fileName, string folder, GameRenderer renderer, bool cloneable = false){
         var json = File.ReadAllText(Path.Combine(folder, fileName));
         var spriteSheet = JsonSerializer.Deserialize<SpriteSheet>(json, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
         if(spriteSheet != null){
             spriteSheet.LoadTexture(renderer, folder);
+            spriteSheet._cloneable = cloneable;
         }
         return spriteSheet;
     }
@@ -122,6 +125,11 @@ public class SpriteSheet : ICloneable
 
     public object Clone()
     {
+        if (!_cloneable)
+        {
+            return null;
+        }
+
         return new SpriteSheet()
         {
             FileName = FileName,
