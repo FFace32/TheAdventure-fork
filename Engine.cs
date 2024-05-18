@@ -16,8 +16,11 @@ namespace TheAdventure
         private GameRenderer _renderer;
         private Input _input;
 
+        private SpriteSheet _zombieSpriteSheet;
+
         private DateTimeOffset _lastUpdate = DateTimeOffset.Now;
         private DateTimeOffset _lastBombUpdate = DateTimeOffset.Now;
+        private DateTimeOffset _lastZombieUpdate = DateTimeOffset.Now;
 
         public Engine(GameRenderer renderer, Input input)
         {
@@ -68,6 +71,9 @@ namespace TheAdventure
                 _player = new PlayerObject(spriteSheet, 100, 100);
             }
             _renderer.SetWorldBounds(new Rectangle<int>(0, 0, _currentLevel.TotalWidth, _currentLevel.TotalHeight));
+
+            _zombieSpriteSheet = SpriteSheet.LoadSpriteSheet("zombie.json", "Assets", _renderer) ??
+                throw new NullReferenceException("Zombie sprite sheet not found");
         }
 
         public void ProcessFrame()
@@ -109,6 +115,9 @@ namespace TheAdventure
             {
                 AddBomb(_player.Position.X, _player.Position.Y, false);
             }
+
+            // Add a zombie every second
+            AddZombies();
 
             foreach (var gameObjectId in itemsToRemove)
             {
@@ -256,6 +265,33 @@ namespace TheAdventure
                 TemporaryGameObject bomb = new(spriteSheet, 2.1, (translated.X, translated.Y));
                 _gameObjects.Add(bomb.Id, bomb);
             }
+        }
+
+        private void AddZombies()
+        {
+            // Spawn a zombie every second
+            if (DateTime.Now - _lastZombieUpdate < TimeSpan.FromSeconds(1))
+            {
+                return;
+            }
+            _lastZombieUpdate = DateTime.Now;
+
+            int spawnX = -1;
+            int spawnY = -1;
+
+            // Keep trying to find a spawn location that is not too close to the player
+            const int maxDistance = 100;
+            while (spawnX < 0 || spawnY < 0 ||
+                Math.Abs(spawnX - _player.Position.X) < maxDistance ||
+                Math.Abs(spawnY - _player.Position.Y) < maxDistance)
+            {
+                const int borderOffset = 20;
+                spawnX = borderOffset + Random.Shared.Next() % (_currentLevel.TotalWidth - borderOffset * 2);
+                spawnY = borderOffset + Random.Shared.Next() % (_currentLevel.TotalHeight - borderOffset * 2);
+            }
+
+            var zombie = new PlayerObject(_zombieSpriteSheet, spawnX, spawnY);
+            _gameObjects.Add(zombie.Id, zombie);
         }
 
         private bool IsGameOver()
