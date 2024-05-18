@@ -23,6 +23,12 @@ public class SpriteSheet
     public int FrameHeight { get; set; }
     public FrameOffset FrameCenter { get; set; }
 
+    public float Scale { get; set; } = 1.0f;
+    public int ScaledFrameWidth => (int)(FrameWidth * Scale);
+    public int ScaledFrameHeight => (int)(FrameHeight * Scale);
+    public int ScaledFrameCenterOffsetX => (int)(FrameCenter.OffsetX * Scale);
+    public int ScaledFrameCenterOffsetY => (int)(FrameCenter.OffsetY * Scale);
+
     public string? FileName { get; set; }
 
     public Animation? ActiveAnimation { get; private set; }
@@ -82,7 +88,7 @@ public class SpriteSheet
         if (ActiveAnimation == null)
         {
             renderer.RenderTexture(_textureId, new Rectangle<int>(0, 0, FrameWidth, FrameHeight),
-                new Rectangle<int>(dest.X - FrameCenter.OffsetX, dest.Y - FrameCenter.OffsetY, FrameWidth, FrameHeight),
+                new Rectangle<int>(dest.X - ScaledFrameCenterOffsetX, dest.Y - ScaledFrameCenterOffsetY, ScaledFrameWidth, ScaledFrameHeight),
                 RendererFlip.None, angle, rotationCenter);
         }
         else
@@ -109,7 +115,7 @@ public class SpriteSheet
 
             renderer.RenderTexture(_textureId,
                 new Rectangle<int>(currentCol * FrameWidth, currentRow * FrameHeight, FrameWidth, FrameHeight),
-                new Rectangle<int>(dest.X - FrameCenter.OffsetX, dest.Y - FrameCenter.OffsetY, FrameWidth, FrameHeight),
+                new Rectangle<int>(dest.X - ScaledFrameCenterOffsetX, dest.Y - ScaledFrameCenterOffsetY, ScaledFrameWidth, ScaledFrameHeight),
                 ActiveAnimation.Flip, angle, rotationCenter);
         }
     }
