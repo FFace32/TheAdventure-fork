@@ -16,8 +16,12 @@ namespace TheAdventure
         private GameRenderer _renderer;
         private Input _input;
 
+        private SpriteSheet _zombieSpriteSheet;
+        private Dictionary<int, DateTime> _attackingZombies = new();
+
         private DateTimeOffset _lastUpdate = DateTimeOffset.Now;
         private DateTimeOffset _lastBombUpdate = DateTimeOffset.Now;
+        private DateTimeOffset _lastZombieUpdate = DateTimeOffset.Now;
 
         public Engine(GameRenderer renderer, Input input)
         {
@@ -68,6 +72,9 @@ namespace TheAdventure
                 _player = new PlayerObject(spriteSheet, 100, 100);
             }
             _renderer.SetWorldBounds(new Rectangle<int>(0, 0, _currentLevel.TotalWidth, _currentLevel.TotalHeight));
+
+            _zombieSpriteSheet = SpriteSheet.LoadSpriteSheet("zombie.json", "Assets", _renderer, true) ??
+                throw new NullReferenceException("Zombie sprite sheet not found");
         }
 
         public void ProcessFrame()
@@ -91,6 +98,40 @@ namespace TheAdventure
                 dir += right ? 1 : 0;
                 if(dir <= 1){
                     _player.Attack(up, down, left, right);
+
+                    foreach (var zombie in GetAllPlayerObjects(false))
+                    {
+                        var deltaX = zombie.Position.X - _player.Position.X;
+                        var deltaY = zombie.Position.Y - _player.Position.Y;
+                        var direction = _player.State.Direction;
+
+                        const int attackDistance = 20;
+                        if (Math.Abs(deltaX) < attackDistance)
+                        {
+                            if (direction == PlayerObject.PlayerStateDirection.Up && deltaY > -attackDistance && deltaY < 0)
+                            {
+                                zombie.GameOver();
+                            }
+                            
+                            if (direction == PlayerObject.PlayerStateDirection.Down && deltaY < attackDistance && deltaY > 0)
+                            {
+                                zombie.GameOver();
+                            }
+                        }
+
+                        if (Math.Abs(deltaY) < attackDistance)
+                        {
+                            if (direction == PlayerObject.PlayerStateDirection.Left && deltaX > -attackDistance && deltaX < 0)
+                            {
+                                zombie.GameOver();
+                            }
+                            
+                            if (direction == PlayerObject.PlayerStateDirection.Right && deltaX < attackDistance && deltaX > 0)
+                            {
+                                zombie.GameOver();
+                            }
+                        }
+                    }
                 }
                 else{
                     isAttacking = false;
@@ -107,7 +148,54 @@ namespace TheAdventure
 
             if (addBomb)
             {
-                AddBomb(_player.Position.X, _player.Position.Y, false);
+                AddBomb((int)_player.Position.X, (int)_player.Position.Y, false);
+            }
+
+            // Add a zombie every second
+            AddZombies();
+
+            foreach (var zombie in GetAllPlayerObjects(false))
+            {
+                if (IsGameOver())
+                {
+                    zombie.SetState(PlayerObject.PlayerState.Celebrate, PlayerObject.PlayerStateDirection.Down);
+                }
+                else
+                {
+                    var deltaX = zombie.Position.X - _player.Position.X;
+                    var deltaY = zombie.Position.Y - _player.Position.Y;
+
+                    up = deltaY > 1;
+                    down = deltaY < -1;
+                    left = deltaX > 1;
+                    right = deltaX < -1;
+
+                    if (zombie.State.State != PlayerObject.PlayerState.GameOver &&
+                        Math.Abs(deltaX) < 20 && Math.Abs(deltaY) < 20)
+                    {
+                        zombie.Attack(up, down, left, right);
+                        
+                        if (_attackingZombies.ContainsKey(zombie.Id))
+                        {
+                            if (DateTime.Now - _attackingZombies[zombie.Id] > TimeSpan.FromSeconds(0.75))
+                            {
+                                _player.GameOver();
+                            }
+                        }
+                        else
+                        {
+                            _attackingZombies[zombie.Id] = DateTime.Now;
+                        }
+                    }
+                    else
+                    {
+                        _attackingZombies.Remove(zombie.Id);
+                        
+                        const double zombieSpeed = 0.25;
+                        zombie.UpdatePlayerPosition(up ? zombieSpeed : 0.0, down ? zombieSpeed : 0.0, left ? zombieSpeed : 0.0, right ? zombieSpeed : 0.0,
+                            _currentLevel.TotalWidth, _currentLevel.TotalHeight, secsSinceLastFrame);
+                    }
+                }
             }
 
             foreach (var gameObjectId in itemsToRemove)
@@ -115,10 +203,14 @@ namespace TheAdventure
                 var gameObject = _gameObjects[gameObjectId];
                 if(gameObject is TemporaryGameObject){
                     var tempObject = (TemporaryGameObject)gameObject;
-                    var deltaX = Math.Abs(_player.Position.X - tempObject.Position.X);
-                    var deltaY = Math.Abs(_player.Position.Y - tempObject.Position.Y);
-                    if(deltaX < 32 && deltaY < 32){
-                        _player.GameOver();
+
+                    foreach (var player in GetAllPlayerObjects())
+                    {
+                        var deltaX = Math.Abs(player.Position.X - tempObject.Position.X);
+                        var deltaY = Math.Abs(player.Position.Y - tempObject.Position.Y);
+                        if(deltaX < 32 && deltaY < 32){
+                            player.GameOver();
+                        }
                     }
                 }
                 _gameObjects.Remove(gameObjectId);
@@ -130,7 +222,7 @@ namespace TheAdventure
             _renderer.SetDrawColor(83, 155, 102, 255);
             _renderer.ClearScreen();
             
-            _renderer.CameraLookAt(_player.Position.X, _player.Position.Y);
+            _renderer.CameraLookAt((int)_player.Position.X, (int)_player.Position.Y);
 
             RenderTerrain();
             RenderAllObjects();
@@ -203,6 +295,22 @@ namespace TheAdventure
             }
         }
 
+        private IEnumerable<PlayerObject> GetAllPlayerObjects(bool includeActualPlayer = true)
+        {
+            if (includeActualPlayer)
+            {
+                yield return _player;
+            }
+
+            foreach (var gameObject in _gameObjects.Values)
+            {
+                if (gameObject is PlayerObject playerObject)
+                {
+                    yield return playerObject;
+                }
+            }
+        }
+
         private void RenderAllObjects()
         {
             foreach (var gameObject in GetAllRenderableObjects())
@@ -234,6 +342,9 @@ namespace TheAdventure
                     windowSize.Height / 2 - textSize.Height / 2,
                     r, gb, gb);
             }
+
+            int zombiesKilled = GetAllPlayerObjects(false).Where(z => z.State.State == PlayerObject.PlayerState.GameOver).Count();
+            _renderer.RenderText($"Zombies killed: {zombiesKilled}", 16, 10, 10, 255, 255, 255);
         }
 
         private void AddBomb(int x, int y, bool translateCoordinates = true)
@@ -256,6 +367,36 @@ namespace TheAdventure
                 TemporaryGameObject bomb = new(spriteSheet, 2.1, (translated.X, translated.Y));
                 _gameObjects.Add(bomb.Id, bomb);
             }
+        }
+
+        private void AddZombies()
+        {
+            // Don't spawn if the game is over
+            if (IsGameOver()) return;
+
+            // Spawn a zombie every second
+            if (DateTime.Now - _lastZombieUpdate < TimeSpan.FromSeconds(1))
+            {
+                return;
+            }
+            _lastZombieUpdate = DateTime.Now;
+
+            int spawnX = -1;
+            int spawnY = -1;
+
+            // Keep trying to find a spawn location that is not too close to the player
+            const int maxDistance = 100;
+            while (spawnX < 0 || spawnY < 0 ||
+                Math.Abs(spawnX - _player.Position.X) < maxDistance ||
+                Math.Abs(spawnY - _player.Position.Y) < maxDistance)
+            {
+                const int borderOffset = 20;
+                spawnX = borderOffset + Random.Shared.Next() % (_currentLevel.TotalWidth - borderOffset * 2);
+                spawnY = borderOffset + Random.Shared.Next() % (_currentLevel.TotalHeight - borderOffset * 2);
+            }
+
+            var zombie = new PlayerObject(_zombieSpriteSheet, spawnX, spawnY);
+            _gameObjects.Add(zombie.Id, zombie);
         }
 
         private bool IsGameOver()

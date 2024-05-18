@@ -5,7 +5,7 @@ using TheAdventure.Models.Data;
 
 namespace TheAdventure.Models;
 
-public class SpriteSheet
+public class SpriteSheet : ICloneable
 {
     public class Animation
     {
@@ -23,6 +23,12 @@ public class SpriteSheet
     public int FrameHeight { get; set; }
     public FrameOffset FrameCenter { get; set; }
 
+    public float Scale { get; set; } = 1.0f;
+    public int ScaledFrameWidth => (int)(FrameWidth * Scale);
+    public int ScaledFrameHeight => (int)(FrameHeight * Scale);
+    public int ScaledFrameCenterOffsetX => (int)(FrameCenter.OffsetX * Scale);
+    public int ScaledFrameCenterOffsetY => (int)(FrameCenter.OffsetY * Scale);
+
     public string? FileName { get; set; }
 
     public Animation? ActiveAnimation { get; private set; }
@@ -31,15 +37,18 @@ public class SpriteSheet
     private int _textureId = -1;
     private DateTimeOffset _animationStart = DateTimeOffset.MinValue;
 
+    private bool _cloneable = false;
+
     public SpriteSheet(){
 
     }
 
-    public static SpriteSheet? LoadSpriteSheet(string fileName, string folder, GameRenderer renderer){
+    public static SpriteSheet? LoadSpriteSheet(string fileName, string folder, GameRenderer renderer, bool cloneable = false){
         var json = File.ReadAllText(Path.Combine(folder, fileName));
         var spriteSheet = JsonSerializer.Deserialize<SpriteSheet>(json, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
         if(spriteSheet != null){
             spriteSheet.LoadTexture(renderer, folder);
+            spriteSheet._cloneable = cloneable;
         }
         return spriteSheet;
     }
@@ -82,7 +91,7 @@ public class SpriteSheet
         if (ActiveAnimation == null)
         {
             renderer.RenderTexture(_textureId, new Rectangle<int>(0, 0, FrameWidth, FrameHeight),
-                new Rectangle<int>(dest.X - FrameCenter.OffsetX, dest.Y - FrameCenter.OffsetY, FrameWidth, FrameHeight),
+                new Rectangle<int>(dest.X - ScaledFrameCenterOffsetX, dest.Y - ScaledFrameCenterOffsetY, ScaledFrameWidth, ScaledFrameHeight),
                 RendererFlip.None, angle, rotationCenter);
         }
         else
@@ -109,8 +118,29 @@ public class SpriteSheet
 
             renderer.RenderTexture(_textureId,
                 new Rectangle<int>(currentCol * FrameWidth, currentRow * FrameHeight, FrameWidth, FrameHeight),
-                new Rectangle<int>(dest.X - FrameCenter.OffsetX, dest.Y - FrameCenter.OffsetY, FrameWidth, FrameHeight),
+                new Rectangle<int>(dest.X - ScaledFrameCenterOffsetX, dest.Y - ScaledFrameCenterOffsetY, ScaledFrameWidth, ScaledFrameHeight),
                 ActiveAnimation.Flip, angle, rotationCenter);
         }
+    }
+
+    public object Clone()
+    {
+        if (!_cloneable)
+        {
+            return null;
+        }
+
+        return new SpriteSheet()
+        {
+            FileName = FileName,
+            RowCount = RowCount,
+            ColumnCount = ColumnCount,
+            FrameWidth = FrameWidth,
+            FrameHeight = FrameHeight,
+            FrameCenter = FrameCenter,
+            Scale = Scale,
+            Animations = Animations.ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
+            _textureId = _textureId
+        };
     }
 }

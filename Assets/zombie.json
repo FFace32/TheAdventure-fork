@@ -1,0 +1,136 @@
+{
+    "rowCount": 38,
+    "columnCount": 4,
+    "frameWidth": 256,
+    "frameHeight": 256,
+    "frameCenter": {
+        "offsetX": 128,
+        "offsetY": 220
+    },
+    "fileName": "zombie.png",
+    "scale": 0.1875,
+    "animations": {
+        "MoveLeft": {
+            "startFrame": {
+                "row": 10,
+                "col": 0
+            },
+            "endFrame": {
+                "row": 14,
+                "col": 3
+            },
+            "durationMs": 1000,
+            "loop": true,
+            "flip": 1
+        },
+        "MoveRight": {
+            "startFrame": {
+                "row": 10,
+                "col": 0
+            },
+            "endFrame": {
+                "row": 14,
+                "col": 3
+            },
+            "durationMs": 1000,
+            "loop": true
+        },
+        "MoveDown": {
+            "startFrame": {
+                "row": 5,
+                "col": 0
+            },
+            "endFrame": {
+                "row": 9,
+                "col": 3
+            },
+            "durationMs": 1000,
+            "loop": true
+        },
+        "MoveUp": {
+            "startFrame": {
+                "row": 0,
+                "col": 0
+            },
+            "endFrame": {
+                "row": 4,
+                "col": 3
+            },
+            "durationMs": 1000,
+            "loop": true
+        },
+        "AttackLeft": {
+            "startFrame": {
+                "row": 25,
+                "col": 0
+            },
+            "endFrame": {
+                "row": 29,
+                "col": 3
+            },
+            "durationMs": 800,
+            "loop": true,
+            "flip": 1
+        },
+        "AttackRight": {
+            "startFrame": {
+                "row": 25,
+                "col": 0
+            },
+            "endFrame": {
+                "row": 29,
+                "col": 3
+            },
+            "durationMs": 800,
+            "loop": true
+        },
+        "AttackDown": {
+            "startFrame": {
+                "row": 20,
+                "col": 0
+            },
+            "endFrame": {
+                "row": 24,
+                "col": 3
+            },
+            "durationMs": 800,
+            "loop": true
+        },
+        "AttackUp": {
+            "startFrame": {
+                "row": 15,
+                "col": 0
+            },
+            "endFrame": {
+                "row": 19,
+                "col": 3
+            },
+            "durationMs": 800,
+            "loop": true
+        },
+        "GameOver": {
+            "startFrame": {
+                "row": 30,
+                "col": 0
+            },
+            "endFrame": {
+                "row": 33,
+                "col": 3
+            },
+            "durationMs": 300,
+            "loop": false
+        },
+        "CelebrateDown": {
+            "startFrame": {
+                "row": 34,
+                "col": 0
+            },
+            "endFrame": {
+                "row": 37,
+                "col": 3
+            },
+            "durationMs": 1000,
+            "loop": true
+        }
+    }
+}
